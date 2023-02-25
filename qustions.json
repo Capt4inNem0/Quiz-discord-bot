@@ -1,0 +1,14 @@
+{
+  'data': [
+    {
+      'question': 'What is the capital of France?',
+      'correct_answer': 2,
+      'options': [
+        'London',
+        'Berlin',
+        'Paris',
+        'Rome'
+      ]
+    }
+  ]
+}
