@@ -1,4 +1,5 @@
 import asyncio
+from threading import Thread
 
 import discord
 from discord.ext import commands
@@ -82,7 +83,7 @@ class Bot(commands.Bot):
         """
         msg = await ctx.send(msg)  # Message to react to
         for response in self.responses:
-            msg.add_reaction(response)
+            asyncio.get_event_loop().create_task(msg.add_reaction(response))
 
         results = await self.check_responses(msg, correct_answer)  # Wait for a reaction
         positions_string = ""
