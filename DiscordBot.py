@@ -1,5 +1,6 @@
 import asyncio
-from threading import Thread
+import json
+from random import randint
 
 import discord
 from discord.ext import commands
@@ -16,53 +17,19 @@ class Bot(commands.Bot):
         self.responses = ['1️⃣', '2️⃣', '3️⃣', '4️⃣']
 
     def setup(self):
-
-        @self.command(pass_context=True)
-        @has_permissions(administrator=True)
-        async def whoami(ctx):
-            msg = "You're an admin {}".format(ctx.message.author.mention)
-            await ctx.send(msg)
-
-        @whoami.error
-        async def whoami_error(ctx, error):
-            if isinstance(error, CheckFailure):
-                msg = "You're an average joe {}".format(ctx.message.author.mention)
-                await ctx.send(msg)
-
-        @self.command(pass_context=True)
-        @has_permissions(administrator=True)
-        async def select(ctx):
-            msg = "Setting this channel for quiz game."
-            await ctx.send(msg)
-            if ctx.guild.id not in self.settings:
-                self.settings[ctx.guild.id] = {}
-            self.settings[ctx.guild.id]['channel'] = ctx.channel.id
-
-        @self.command(pass_context=True)
-        @has_permissions(administrator=True)
-        async def getsettings(ctx):
-            msg = "Settings: {}".format(self.settings)
-            await ctx.send(msg)
-
-        @self.command(pass_context=True)
-        @has_permissions(administrator=True)
-        async def startgame(ctx):
-            msg = "Starting game..."
-            await ctx.send(msg)
-            if ctx.guild.id not in self.settings:
-                msg = "No settings found for this server."
-                await ctx.send(msg)
-                return
-            if 'channel' not in self.settings[ctx.guild.id]:
-                msg = "No game channel selected for this server. Use ?select to select a channel."
-                await ctx.send(msg)
-                return
-            channel = self.get_channel(self.settings[ctx.guild.id]['channel'])
-            await channel.send("Game started!")
-
         @self.command()
+        @has_permissions(administrator=True)
         async def quiz(ctx):
-            await self.ask(ctx, "What is the capital of France?", ["Paris", "London", "Berlin", "Rome"], 0)
+            file = open('qustions.json', mode='r')
+            questions = json.load(file)['data']
+            file.close()
+            min_range = min(len(questions), 10)
+            for i in range(min_range):
+                index = randint(0, len(questions) - 1)
+                question = questions[index]
+                questions.pop(index)
+                await self.ask(ctx, question['question'], question['answers'], question['correct_answer'])
+            await asyncio.sleep(3)
 
     async def on_ready(self):
         print(f'{self.user.name} has connected to Discord!')
