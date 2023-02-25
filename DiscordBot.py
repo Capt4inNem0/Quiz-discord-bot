@@ -23,7 +23,7 @@ class Bot(commands.Bot):
             file = open('qustions.json', mode='r')
             questions = json.load(file)['data']
             file.close()
-            min_range = min(len(questions), 10)
+            min_range = min(len(questions), 20)
             total_points = {}
             for i in range(min_range):
                 index = randint(0, len(questions) - 1)
@@ -33,12 +33,15 @@ class Bot(commands.Bot):
                 for user, time in results.items():
                     if user not in total_points:
                         total_points[user] = 0
-                    total_points[user] += 1
+                    total_points[user] += 100/time
             await ctx.send("The quiz is over!")
             overall_string = ""
             total_points_sorted = dict(reversed(sorted(total_points.items(), key=lambda item: item[1])))
+            max_winners = min(len(total_points_sorted), 20)
             position = 1
             for user, points in total_points_sorted.items():
+                if position > max_winners:
+                    break
                 overall_string += f"{position}. {user.mention} - {points} points\n"
                 position += 1
             await ctx.send(overall_string)
