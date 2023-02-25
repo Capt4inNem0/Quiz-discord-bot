@@ -24,11 +24,24 @@ class Bot(commands.Bot):
             questions = json.load(file)['data']
             file.close()
             min_range = min(len(questions), 10)
+            total_points = {}
             for i in range(min_range):
                 index = randint(0, len(questions) - 1)
                 question = questions[index]
                 questions.pop(index)
-                await self.ask(ctx, question['question'], question['answers'], question['correct_answer'])
+                results = await self.ask(ctx, question['question'], question['options'], question['correct_answer'])
+                for user, time in results.items():
+                    if user not in total_points:
+                        total_points[user] = 0
+                    total_points[user] += 1
+            await ctx.send("The quiz is over!")
+            overall_string = ""
+            total_points_sorted = dict(reversed(sorted(total_points.items(), key=lambda item: item[1])))
+            position = 1
+            for user, points in total_points_sorted.items():
+                overall_string += f"{position}. {user.mention} - {points} points\n"
+                position += 1
+            await ctx.send(overall_string)
             await asyncio.sleep(3)
 
     async def on_ready(self):
@@ -60,18 +73,27 @@ class Bot(commands.Bot):
             if position == max_winners:
                 break
             position += 1
+        if len(positions_string) == 0:
+            positions_string = "No one got it right!"
         await ctx.send(positions_string)
+        return results
 
     async def check_responses(self, message, correct_answer=0, time_limit=10):
         def check(reaction, user):
-            return str(reaction.emoji) == self.responses[correct_answer] and user != self.user
+            return user != self.user
         reactions_user_time = {}  # Dictionary to store the reactions and the time the user reacted
+        losers_list = []
         start_time = tm.time()
         timeout = False
         while not timeout:
             try:
                 reaction = await self.wait_for("reaction_add", timeout=0.5, check=check)  # Wait for a reaction
-                reactions_user_time[reaction[1]] = tm.time() - start_time
+                if reaction[1] not in reactions_user_time and reaction[1] not in losers_list:
+                    if self.responses.index(reaction[0].emoji) == correct_answer:
+                        reactions_user_time[reaction[1]] = tm.time() - start_time
+                    else:
+                        losers_list.append(reaction[1])
+
             except asyncio.TimeoutError:
                 pass
             timeout = (tm.time() - start_time) > time_limit  # If the time is more than 10 seconds
