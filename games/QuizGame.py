@@ -5,13 +5,13 @@ from random import randint
 
 from games.Game import Game
 from models.Question import Question
+from models.UserScore import UserScore
 
 
 class QuizGame(Game):
     def __init__(self, bot, questions_file_path='questions.json', max_questions=20, max_winners=3, time_limit=10):
         super().__init__(bot, max_winners, time_limit)
         self.options = ['1️⃣', '2️⃣', '3️⃣', '4️⃣']
-        self.total_points = {}
         self.results = {}
 
         self.questions_file_path = questions_file_path
@@ -28,7 +28,8 @@ class QuizGame(Game):
             question = Question(**questions[index])
             questions.pop(index)
             results = await self.ask(ctx, question)
-            results_string = await self.round_results_by_time(results)
+            results_string = await self.round_results_by_time(
+                list(map(lambda item: UserScore(item[0], item[1], 'seconds'), results.items())))
             await ctx.send(results_string)
             await self.register_round_points(results)
 
@@ -46,37 +47,6 @@ class QuizGame(Game):
     async def add_options_to_message(self, msg):
         for emoji in self.options:
             asyncio.get_event_loop().create_task(msg.add_reaction(emoji))
-
-    async def round_results_by_time(self, results: dict):
-        if len(results.keys()) == 0:
-            return "No one got it right!"
-
-        results_sorted = list(reversed(sorted(results.items(), key=lambda item: item[1])))
-
-        positions_array = [
-            f"{i+1}. {results_sorted[i][0].mention} - {results_sorted[i][1]:.2f} seconds\n"
-            for i in range(len(results_sorted))]
-
-        return "".join(positions_array[:min(self.max_winners, len(results_sorted))])
-
-    async def register_round_points(self, results: dict):
-        for user, time in results.items():
-            if user not in self.total_points:
-                self.total_points[user] = 0
-            self.total_points[user] += 1 + 1/time
-
-    async def overall_results_by_points(self):
-        total_points_sorted = list(reversed(sorted(self.total_points.items(), key=lambda item: item[1])))
-
-        if len(total_points_sorted) == 0:
-            return "No winners for this game!"
-
-        positions_array = [
-            f"{i + 1}. {total_points_sorted[i][0].mention} - {total_points_sorted[i][1]:.2f} points\n"
-            for i in range(len(total_points_sorted))]
-
-        max_winners = min(self.max_winners, len(total_points_sorted))
-        return "".join(positions_array[:max_winners])
 
     async def check_responses(self, message, correct_answer=0):
         def check(reaction, user):
