@@ -36,13 +36,3 @@ class Bot(commands.Bot):
         if message.author == self.user:
             return
         await self.process_commands(message)
-
-    async def xcode_phrase(self, sentence):
-        sentence = sentence.split()
-        for i in range(len(sentence)):
-            if randint(0, 100) < 60:
-                if sentence[i] != ' ':
-                    sentence[i] = 'X'
-        return ''.join(sentence)
-    async def guess_game(self, ctx, sentence, sentence_to_guess):
-        msg = await ctx.send(sentence_to_guess)

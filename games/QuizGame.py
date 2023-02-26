@@ -3,20 +3,19 @@ import asyncio
 import time as tm
 from random import randint
 
+from games.Game import Game
 from models.Question import Question
 
 
-class QuizGame:
+class QuizGame(Game):
     def __init__(self, bot, questions_file_path='questions.json', max_questions=20, max_winners=3, time_limit=10):
+        super().__init__(bot, max_winners, time_limit)
         self.options = ['1️⃣', '2️⃣', '3️⃣', '4️⃣']
         self.total_points = {}
         self.results = {}
 
         self.questions_file_path = questions_file_path
         self.max_questions = max_questions
-        self.max_winners = max_winners
-        self.time_limit = time_limit
-        self.bot = bot
 
     async def start(self, ctx):
         file = open(self.questions_file_path, mode='r')
