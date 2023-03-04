@@ -38,7 +38,7 @@ class GuessPhraseGame(Game):
                         await ctx.send(f"Nobody guessed the phrase. The correct phrase was: {sentence}")
                         winner = "Nobody"
                     else:
-                        await msg.edit(content=sentence_to_guess)
+                        await ctx.send(sentence_to_guess)
             if winner != "Nobody":
                 await ctx.send(f"{winner.mention} guessed the phrase!")
                 results = {winner: 1}
@@ -51,13 +51,13 @@ class GuessPhraseGame(Game):
         for i in range(len(sentence)):
             if randint(0, 100) < 65:
                 if sentence[i] != ' ':
-                    sentence[i] = '-'
+                    sentence[i] = '#'
         return ''.join(sentence)
 
     async def xdecode_phrase(self, correct_sentence, coded_sentence):
         sentence = list(correct_sentence)
         decode = list(coded_sentence)
-        random_index = random.choice([i for i in range(len(sentence)) if sentence[i] != ' ' and decode[i] == '-'])
+        random_index = random.choice([i for i in range(len(sentence)) if sentence[i] != ' ' and decode[i] == '#'])
         decode[random_index] = sentence[random_index]
         return ''.join(decode)
 
